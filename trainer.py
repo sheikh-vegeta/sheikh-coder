@@ -51,17 +51,18 @@ def run(args):
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
+        token=args.hf_token,
     )
     model.config.use_cache = False
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True, token=args.hf_token)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
     # 3. Load and Preprocess Dataset
     print(f"Loading dataset: {args.dataset_name}")
     # Using validation split as it is smaller and available for gaia-benchmark/GAIA
-    dataset = load_dataset(args.dataset_name, split="validation")
+    dataset = load_dataset(args.dataset_name, split="validation", token=args.hf_token)
 
     # For demonstration, we'll just use a small subset of the data
     dataset = dataset.select(range(100))
