@@ -1,4 +1,5 @@
 import argparse
+import os
 import trainer
 
 def main():
@@ -22,8 +23,8 @@ def main():
     parser.add_argument(
         "--hf_token",
         type=str,
-        required=True,
-        help="The Hugging Face API token for accessing gated models and datasets."
+        default=None,
+        help="The Hugging Face API token. If not provided, it will be read from the HF_TOKEN environment variable."
     )
     parser.add_argument(
         "--output_dir",
@@ -44,6 +45,18 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Prioritize token from argument, then environment variable
+    if args.hf_token:
+        token = args.hf_token
+    else:
+        token = os.getenv("HF_TOKEN")
+
+    if not token:
+        raise ValueError("Hugging Face token not found. Pass it with --hf_token or set the HF_TOKEN environment variable.")
+
+    # Assign the resolved token back to args
+    args.hf_token = token
 
     print("Training script started.")
     trainer.run(args)
