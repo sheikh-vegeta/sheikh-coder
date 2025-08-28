@@ -1,0 +1,35 @@
+name: Train Sheikh Model
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' # Matching the CI file
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Training Script
+        run: |
+          python train_sheikh.py \
+            --model_name "meta-llama/Meta-Llama-3-8B" \
+            --dataset_name "gaia-benchmark/GAIA" \
+            --output_dir "./sheikh-coder-finetuned" \
+            --push_to_hub \
+            --hub_model_id "likhonsheikh/sheikh-coder"
