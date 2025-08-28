@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: '3.9' # Matching the CI file
 
+      - name: List files recursively
+        run: ls -lR
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
