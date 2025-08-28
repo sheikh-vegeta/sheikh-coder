@@ -15,6 +15,15 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v3
 
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -33,3 +42,21 @@ jobs:
             --output_dir "./sheikh-coder-finetuned" \
             --push_to_hub \
             --hub_model_id "likhonsheikh/sheikh-coder"
+
+  release:
+    needs: train
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.run_id }}
+          name: Release ${{ github.run_id }}
+          body: |
+            Training run completed successfully.
+            Model pushed to Hugging Face Hub at: https://huggingface.co/likhonsheikh/sheikh-coder
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
