@@ -1,0 +1,9 @@
+transformers
+datasets
+torch
+peft
+bitsandbytes
+accelerate
+huggingface_hub
+trl
+flake8
