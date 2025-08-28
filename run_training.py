@@ -31,6 +31,17 @@ def main():
         default="./output",
         help="The directory to save the output artifacts (model, checkpoints, logs)."
     )
+    parser.add_argument(
+        "--push_to_hub",
+        action="store_true",
+        help="Whether to push the model to the Hugging Face Hub."
+    )
+    parser.add_argument(
+        "--hub_model_id",
+        type=str,
+        default="likhonsheikh/sheikh-coder",
+        help="The repository ID on the Hugging Face Hub."
+    )
 
     args = parser.parse_args()
 

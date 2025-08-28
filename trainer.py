@@ -11,6 +11,20 @@ from peft import LoraConfig
 from trl import SFTTrainer
 from huggingface_hub import login
 
+def format_instruction_xml(instruction: str, input_text: str = "", output_text: str = "", example_id: str = None) -> str:
+    """
+    Formats an instruction set into an XML-like string for Sheikh model training.
+    """
+    example_id_attr = f' id="{example_id}"' if example_id else ""
+    xml = f"<example{example_id_attr}>\n"
+    xml += f"  <instruction>{instruction}</instruction>\n"
+    if input_text:
+        xml += f"  <input>{input_text}</input>\n"
+    if output_text:
+        xml += f"  <output>{output_text}</output>\n"
+    xml += "</example>"
+    return xml
+
 def run(args):
     """
     The main training function.
@@ -52,20 +66,21 @@ def run(args):
     # For demonstration, we'll just use a small subset of the data
     dataset = dataset.select(range(100))
 
-    def format_instruction(sample):
-        # The GAIA dataset has 'Question' and 'Final Rationale' fields.
-        return f"""### Instruction:
-You are a helpful assistant. Your task is to answer the following question.
+    def format_gaia_sample(sample, index):
+        instruction = "You are a helpful assistant. Your task is to answer the following question."
+        input_text = sample.get("Question", "")
+        output_text = sample.get("Final Rationale", "")
+        example_id = f"{index:03d}"
 
-### Question:
-{sample['Question']}
+        return {"text": format_instruction_xml(
+            instruction=instruction,
+            input_text=input_text,
+            output_text=output_text,
+            example_id=example_id
+        )}
 
-### Answer:
-{sample['Final Rationale']}
-"""
-
-    # We need to manually create the 'text' field for the SFTTrainer.
-    dataset = dataset.map(lambda sample: {"text": format_instruction(sample)})
+    # We need to manually create the 'text' field for the SFTTrainer, now in XML format.
+    dataset = dataset.map(format_gaia_sample, with_indices=True)
 
     # 4. Configure LoRA
     print("Configuring LoRA...")
@@ -91,7 +106,8 @@ You are a helpful assistant. Your task is to answer the following question.
         logging_steps=10,
         num_train_epochs=1,
         fp16=True,
-        push_to_hub=False,
+        push_to_hub=args.push_to_hub,
+        hub_model_id=args.hub_model_id,
     )
 
     trainer = SFTTrainer(
